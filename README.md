@@ -39,13 +39,17 @@ Table of Contents
   * [Following by a list](#following-by-a-list)
   * [Follow someone else's followers](#follow-someone-elses-followers)
   * [Follow users that someone else is following](#follow-users-that-someone-else-is-following)
-  * [Follow someone else's followers/following](#follow-someone-elses-followersfollowing)
+  * [Follow someone else's followers/following](#follow-someone-elses-followersfollowing)  
+  * [Follow the likers of photos of users](#follow-the-likers-of-photos-of-users)  
+  * [Follow the commenters of photos of users](#follow-the-commenters-of-photos-of-users)  
   * [Interact with specific users](#interact-with-specific-users)
   * [Interact with users that someone else is following](#interact-with-users-that-someone-else-is-following)
   * [Interact with someone else's followers](#interact-with-someone-elses-followers)
   * [Unfollowing](#unfollowing)
   * [Don't unfollow active users](#dont-unfollow-active-users)
   * [Interactions based on the number of followers and/or following a user has](#interactions-based-on-the-number-of-followers-andor-following-a-user-has)
+  * [Liking based on the number of existing likes a post has](#liking-based-on-the-number-of-existing-likes-a-post-has)
+  * [Commenting based on the number of existing comments a post has](#commenting-based-on-the-number-of-existing-comments-a-post-has)
   * [Comment by Locations](#comment-by-locations)
   * [Like by Locations](#like-by-locations)
   * [Like by Tags](#like-by-tags)
@@ -197,15 +201,27 @@ session.set_do_follow(enabled=True, percentage=10, times=2)
 
 ### Following by a list
 
-```python
-# follows each account from a list of instagram nicknames (only follows a user
-# once (if unfollowed again)) would be useful for the precise targeting.
-# For example, if one needs to get followbacks from followers of a chosen
-# account/group of accounts.
 
-accs = ['therock','natgeo']
-session.follow_by_list(accs, times=1)
+##### This will follow each account from a list of instagram nicknames
+```python
+follow_by_list(followlist=['samantha3', 'larry_ok'], times=1, sleep_delay=600, interact=False)
 ```
+_only follows a user once (if unfollowed again) would be useful for the precise targeting_  
+`sleep_delay` is used to define break time after some good following (_averagely ~`10` follows_)  
+For example, if one needs to get followbacks from followers of a chosen account/group of accounts.  
+```python
+accs = ['therock','natgeo']
+session.follow_by_list(accs, times=1, sleep_delay=600, interact=False)
+```
+* You can also **interact** with the followed users by enabling `interact=True` which will use the configuration of `set_user_interact` setting:  
+```python
+session.set_user_interact(amount=4,
+				 percentage=50,
+                  randomize=True,
+                   media='Photo')
+session.follow_by_list(followlist=['samantha3', 'larry_ok'], times=2, sleep_delay=600, interact=True)
+```
+
 
 ### Follow someone else's followers
 
@@ -259,41 +275,48 @@ session.follow_user_followers(['friend1', 'friend2', 'friend3'], amount=10, rand
 session.follow_by_tags(['tag1', 'tag2'], amount=10)
 ```
 
-### Follow users that liked some photo(s)
+### Follow the likers of photos of users
 
+##### This will follow the people those liked photos of given list of users   
 ```python
-# Follows the people that liked given photo
-# The photo_url_arr is array of urls of photos, can also be just 1 url as string
-# The amount is how many people to follow
-# In this case 10 people who liked photo in photo_url_arr will be followed, for each photo
+session.follow_likers (['user1' , 'user2'], photos_grab_amount = 2, follow_likers_per_photo = 3, randomize=True, sleep_delay=600, interact=False)
+```   
+_in this case 2 random photos from each given user will be analyzed and 3 people who liked them will be followed, so 6 follows in total_  
+The `usernames` can be any list   
+The `photos_grab_amount` is how many photos will I grat from users profile and analyze who liked it  
+The `follow_likers_per_photo` is how many people to follow per each photo  
+`randomize=False` will take photos from newes, true will take random from first 12  
+`sleep_delay` is used to define break time after some good following (_averagely ~`10` follows_)
 
-session.follow_likers(['https://www.instagram.com/p/Bga_UUrDFoc/', 'https://www.instagram.com/p/BgbOtLHD7yp/?taken-by=natgeo'], amount=10)
+* You can also **interact** with the followed users by enabling `interact=True` which will use the configuration of `set_user_interact` setting:  
+```python
+session.set_user_interact(amount=2,
+				 percentage=70,
+                  randomize=True,
+                   media='Photo')
+session.follow_likers (['user1' , 'user2'], photos_grab_amount = 2, follow_likers_per_photo = 3, randomize=True, sleep_delay=600, interact=True)
 ```
 
-### Follow users that liked some user's post(s)
+### Follow the commenters of photos of users
 
+##### This will follow the people those commented on photos of given list of users
 ```python
-# Follows the people that liked photos of given array of users
-# The usernames can be array
-# The photos_grab_amount is how many photos will I grat from users profile and analyze who liked it.
-# The follow_likers_per_photo is how many people to follow per each photo
-# Randomize=False will take photos from newes, true will take random from first 12
-# In this case 2 random photos from each given user will be analyzed and 3 people who liked them will be followed, so 6 follows in total
+session.follow_commenters(['user1', 'user2', 'user3'], amount=100, daysold=365, max_pic = 100, sleep_delay=600, interact=False)
+```   
+_in this case (max 100 newest photos & maximum 365 days old) from each given user will be analyzed and 100 people who commented the most will be followed_  
+The `usernames` can be any list  
+The `amount` is how many people to follow  
+The `daysold` will only take commenters from photos no older than `daysold` days  
+The `max_pic` will limit number of photos to analyze  
+`sleep_delay` is used to define break time after some good following (_averagely ~`10` follows_)
 
-session.follow_user_likers (['user1' , 'user2'], photos_grab_amount = 2, follow_likers_per_photo = 3, randomize=True)
-```
-
-### Follow users who comment the most on given user(s)'s photos
-
+* You can also **interact** with the followed users by enabling `interact=True` which will use the configuration of `set_user_interact` setting:  
 ```python
-# Follows the people that commented photos of given array of users
-# The usernames can be array
-# The amount is how many people to follow
-# The daysold will only take commenters from photos no older than daysold days
-# The max_pic will limit number of photos to analyze
-# In thi case (max 100 newest photos & maximum 365 days old) from each given user will be analyzed and 100 people who commented the most will be followed
-
-session.follow_commenters(['user1', 'user2', 'user3'], amount=100, daysold=365, max_pic = 100)
+session.set_user_interact(amount=3,
+				 percentage=32,
+                  randomize=True,
+                   media='Video')
+session.follow_commenters(['user1', 'user2', 'user3'], amount=100, daysold=365, max_pic = 100, sleep_delay=600, interact=True)
 ```
 
 ### Interact with specific users
@@ -384,6 +407,7 @@ session.set_relationship_bounds(enabled=True,
 				     min_followers=100,
 				      min_following=56)
 ```
+Use `enabled=True` to **activate** this feature, and `enabled=False` to **deactivate** it, _any time_  
 `delimit_by_numbers` is used to **activate** & **deactivate** the usage of max & min values  
 `potency_ratio` accepts values in **2 format**s _according to your_ **style**: _positive_ & _negative_  
 * `potency_ratio` with **POSITIVE** values can be used to _route_ interactions to _only_ **potential** (_real_) **users** _WHOSE_ **followers count** is higher than **following count** (**e.g.**, `potency_ratio = 1.39`)  
@@ -395,6 +419,7 @@ _**find** desired_ `potency_ratio` _with this formula_: `potency_ratio` == **fol
 _**find** desired_ `potency_ratio` _with this formula_: `potency_ratio` == **following count** / **followers count**  (_use desired counts_)
 >_**e.g.**_, target user has _`2000` followers_ & _`3000` following_ and you set `potency_ratio = -1.7`.  
 **Now** it _will **not** interact_ with this user, **cos** the user's **relationship ratio** is `3000/2000==1.5` and `1.5` is **below** _desired_ `potency_ratio` _of `1.7`_ (_**note that**, negative `-` sign is only used to determine your style, nothing more_)
+
 
 ###### There are **3** **COMBINATIONS** _available_ to use:
 * **1**. You can use `potency_ratio` **or not** (**e.g.**, `potency_ratio=None`, `delimit_by_numbers=True`) - _will decide only by your **pre-defined** max & min values regardless of the_ `potency_ratio`
@@ -418,6 +443,54 @@ session.set_relationship_bounds (enabled=True, potency_ratio=-1.44, delimit_by_n
 
 
 
+### Liking based on the number of existing likes a post has
+
+##### This is used to check the number of existing likes a post has and if it _either_ **exceed** the _maximum_ value set OR **does not pass** the _minimum_ value set then it will not like that post
+```python
+session.set_delimit_liking(enabled=True, max=1005, min=20)
+```
+Use `enabled=True` to **activate** and `enabled=False` to **deactivate** it, _any time_  
+`max` is the maximum number of likes to compare  
+`min` is the minimum number of likes to compare
+> You can use **both** _max_ & _min_ values OR **one of them** _as you desire_, just **put** the value of `None` _to the one_ you **don't want to** check for., _e.g._,
+```python
+session.set_delimit_liking(enabled=True, max=242, min=None)
+```
+_at this configuration above, it **will not** check number of the existing likes against **minimum** value_
+
+* **_Example_**:  
+```
+session.set_delimit_liking(enabled=True, max=500, min=7)
+```
+_**Now**, if a post has more existing likes than maximum value of `500`, then it will not like that post,
+**similarly**, if that post has less existing likes than the minimum value of `7`, then it will not like that post..._
+
+
+
+### Commenting based on the number of existing comments a post has
+
+##### This is used to check the number of existing comments a post has and if it _either_ **exceed** the _maximum_ value set OR **does not pass** the _minimum_ value set then it will not comment on that post
+```python
+session.set_delimit_commenting(enabled=True, max=32, min=0)
+```
+Use `enabled=True` to **activate** and `enabled=False` to **deactivate** it, _any time_  
+`max` is the maximum number of comments to compare  
+`min` is the minimum number of comments to compare
+> You can use **both** _max_ & _min_ values OR **one of them** _as you desire_, just **put** the value of `None` _to the one_ you **don't want to** check for., _e.g._,
+```python
+session.set_delimit_commenting(enabled=True, max=None, min=4)
+```
+_at this configuration above, it **will not** check number of the existing comments against **maximum** value_
+
+* **_Example_**:  
+```
+session.set_delimit_commenting(enabled=True, max=70, min=5)
+```
+_**Now**, if a post has more comments than the maximum value of `70`, then it will not comment on that post,
+**similarly**, if that post has less comments than the minimum value of `5`, then it will not comment on that post..._
+
+
+
 ### Comment by Locations
 
 ```python
@@ -430,6 +503,8 @@ session.comment_by_locations(['224442573'], amount=5, skip_top_posts=False)
 ```
 
 This method allows commenting by locations, without liking posts. To get locations follow instructions in 'Like by Locations'
+
+
 
 ### Like by Locations
 
@@ -450,6 +525,7 @@ Example:
 * Search 'Salton Sea' and select the result with a location icon
 * The url is: https://www.instagram.com/explore/locations/224442573/salton-sea/
 * Use everything after 'locations/' or just the number
+
 
 ### Like by Tags
 

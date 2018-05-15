@@ -4,7 +4,10 @@ from random import choice
 from .time_util import sleep
 from .util import update_activity
 from .util import add_user_to_blacklist
+from .util import format_number
 from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import InvalidElementStateException
+from selenium.common.exceptions import NoSuchElementException
 import emoji
 
 
@@ -42,28 +45,70 @@ def comment_image(browser, username, comments, blacklist, logger, logfolder):
     open_comment_section(browser)
     comment_input = get_comment_input(browser)
 
-    if len(comment_input) > 0:
-        comment_input[0].clear()
-        comment_input = get_comment_input(browser)
+    try:
+        if len(comment_input) > 0:
+            comment_input[0].clear()
+            comment_input = get_comment_input(browser)
 
-        browser.execute_script(
-            "arguments[0].value = '" + rand_comment + " ';", comment_input[0])
-        # An extra space is added here and then deleted.
-        # This forces the input box to update the reactJS core
-        comment_input[0].send_keys("\b")
-        comment_input = get_comment_input(browser)
-        comment_input[0].submit()
-        update_activity('comments')
-        if blacklist['enabled'] is True:
-            action = 'commented'
-            add_user_to_blacklist(
-                browser, username, blacklist['campaign'], action, logger, logfolder
-            )
-    else:
-        logger.warning('--> Warning: Comment Action Likely Failed:'
-                       ' Comment Element not found')
+            browser.execute_script(
+                "arguments[0].value = '" + rand_comment + " ';", comment_input[0])
+            # An extra space is added here and then deleted.
+            # This forces the input box to update the reactJS core
+            comment_input[0].send_keys("\b")
+            comment_input = get_comment_input(browser)
+            comment_input[0].submit()
+            update_activity('comments')
+            if blacklist['enabled'] is True:
+                action = 'commented'
+                add_user_to_blacklist(
+                    browser, username, blacklist['campaign'], action, logger, logfolder
+                )
+        else:
+            logger.warning('--> Warning: Comment Action Likely Failed:'
+                           ' Comment Element not found')
+    except InvalidElementStateException:
+        logger.info('--> Warning: Comment Action Likely Failed: Probably InvalidElementStateException')
 
     logger.info("--> Commented: {}".format(rand_comment.encode('utf-8')))
     sleep(2)
 
     return 1
+
+
+def verify_commenting(browser, max, min, logger):
+        """ Get the amount of existing existing comments and compare it against max & min values defined by user """
+        try:
+            comments_disabled = browser.execute_script(
+                "return window._sharedData.entry_data."
+                "PostPage[0].graphql.shortcode_media.comments_disabled")
+        except WebDriverException:
+            try:
+                browser.execute_script("location.reload()")
+                comments_disabled = browser.execute_script(
+                    "return window._sharedData.entry_data."
+                    "PostPage[0].graphql.shortcode_media.comments_disabled")            
+            except:
+                logger.info("Failed to check comments' status for verification...\n")
+                raise
+                return True, 'Verification failure'
+
+        if comments_disabled == True:
+            disapproval_reason = "Not commenting ~comments are disabled for this post"
+            return False, disapproval_reason
+        try:
+            comments_count = browser.execute_script(
+                "return window._sharedData.entry_data."
+                "PostPage[0].graphql.shortcode_media.edge_media_to_comment.count")
+        except:
+            logger.info("Failed to check comments' count for verification...\n")
+            raise
+            return True, 'Verification failure'
+
+        if max is not None and comments_count > max:
+            disapproval_reason = "Not commented on this post! ~more comments exist off maximum limit at {}".format(comments_count)
+            return False, disapproval_reason
+        elif min is not None and comments_count < min:
+            disapproval_reason = "Not commented on this post! ~less comments exist off minumum limit at {}".format(comments_count)
+            return False, disapproval_reason
+
+        return True, 'Approval'
