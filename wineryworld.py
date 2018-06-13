@@ -38,7 +38,7 @@ def get_own_following_count(session):
             session.browser.find_element_by_xpath("//li[3]/a/span").text)
         return allfollowing
     except NoSuchElementException:
-        logger.warning('There are 0 people to follow')
+        print "There are 0 people to follow"
         return 0
 
 
